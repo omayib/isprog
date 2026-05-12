@@ -1,6 +1,6 @@
 # isProg: WHILE-Computable Program Verification
 
-
+![Penjelasan](video-image.png)
 
 This repository contains a step-by-step reconstruction of the proof that the function `isProg` is WHILE-computable, following the encoding techniques from the Theory of Computation lectures.
 
