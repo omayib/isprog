@@ -1,0 +1,261 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usetheme{Madrid}
+\setbeamertemplate{navigation symbols}{}
+
+% Compact itemize
+\setbeamertemplate{itemize items}[circle]
+\setlength{\leftmargini}{0.5em}
+
+\begin{document}
+	
+	% ========== Slide 1: Title ==========
+	\begin{frame}
+		\title{Rebuilding \texttt{isProg}}
+		\subtitle{A Step-by-Step Verification that \texttt{isProg} is WHILE-Computable}
+		\author{Arif Akbarul Huda}
+		\date{Theory of Computation}
+		\titlepage
+	\end{frame}
+	
+	% ========== Slide 2: Objective ==========
+	\begin{frame}{Objective}
+		\begin{itemize}
+			\item Prove that the function \[
+			\texttt{isProg} : \mathbb{N} \to \mathbb{N}
+			\] is WHILE-computable.
+			\item \texttt{isProg(x1)} returns $1$ if \texttt{x1} encodes a valid GOTO program, else $0$.
+			\item Approach: deconstruct the program encoding step by step using only WHILE constructs and already-proved helper functions.
+		\end{itemize}
+	\end{frame}
+	
+	% ========== Slide 3: GOTO Program Encoding Form ==========
+	\begin{frame}{Encoding of a GOTO Program}
+		A GOTO program with $k$ inputs, maximum variable index $m$, and $n$ labelled statements
+		\[
+		L_1:S_1;\; L_2:S_2;\; \ldots\; L_n:S_n
+		\]
+		is encoded as the list
+		\[
+		\bigl(k,\; m,\; \mathrm{enc}(S_1),\; \mathrm{enc}(S_2),\; \ldots,\; \mathrm{enc}(S_n)\bigr)
+		\]
+		and then turned into a single natural number using the list encoding
+		\[
+		\mathrm{enc}((a_1,\dots,a_\ell)) = \pi(a_1+1,\; \mathrm{enc}((a_2,\dots,a_\ell))),\quad \mathrm{enc}(()) = 0.
+		\]
+	\end{frame}
+	
+	% ========== Slide 4: Preliminaries ==========
+	\begin{frame}{Preliminaries – Helpers We Already Have}
+		All the following are WHILE-computable (lectures 1–4):
+		\begin{itemize}
+			\item \texttt{isList(x)} – returns $1$ if \texttt{x} is a valid list encoding.
+			\item \texttt{len(x)} – length of the list.
+			\item \texttt{fst(x)} – first element of a pair / head of a list.
+			\item \texttt{snd(x)} – second element of a pair / tail of a list.
+			\item Basic arithmetic: $x-1$ (predecessor), $x+1$ (successor), zero test.
+		\end{itemize}
+		\vspace{6pt}
+		\textbf{Key convention:} Every list element is stored as $a+1$; empty list is $0$.\\[2pt]
+		Hence we always subtract 1 after \texttt{fst}.
+	\end{frame}
+	
+	% ========== Slide 5: Checkpoints Overview ==========
+	\begin{frame}{Checkpoints Overview}
+		We verify \texttt{isProg} in 9 sequential checkpoints:
+		\begin{enumerate}
+			\item Check \texttt{x1} is a valid list with $\mathrm{len}\ge 2$.
+			\item Extract $k$ and $m$, verify the remainder is a list.
+			\item Compute $n$ (number of statements) from the tail.
+			\item Set up the loop over statements (countdown $n$).
+			\item For each statement: fetch $\mathrm{enc}(S_i)$ and check it is a list.
+			\item Decode the statement type and parameter list; initialise flag.
+			\item Dispatch on the type (flat guarded blocks) – check length and bounds.
+			\item Advance to the next statement (\texttt{snd} + decrement counter).
+			\item After the loop, output the result contained in \texttt{x0}.
+		\end{enumerate}
+	\end{frame}
+	
+	% ========== Slide 6: CP1 – List and length ==========
+	\begin{frame}[fragile]{Checkpoint 1 – Is the Input a Valid Program List?}
+		\textbf{Focus:} \(\mathbf{\bigl(k,\; m,\; \mathrm{enc}(S_1),\; \ldots,\; \mathrm{enc}(S_n)\bigr)}\)
+		\small
+		\begin{verbatim}
+			x2 := isList(x1);
+			IF x2 = 0 THEN x0 := 0; HALT END;
+			
+			x3 := len(x1);
+			IF x3 < 2 THEN x0 := 0; HALT END;
+		\end{verbatim}
+		\vspace{-4pt}
+		\begin{itemize}
+			\item The outer encoding must be a proper list.
+			\item It must contain at least $k$ and $m$, so length $\ge 2$.
+		\end{itemize}
+	\end{frame}
+	
+	% ========== Slide 7: CP2 – Extract k and m ==========
+	\begin{frame}[fragile]{Checkpoint 2 – Extract $k$ and $m$}
+		\textbf{Focus:} \(\bigl(\mathbf{k},\; \mathbf{m},\; \mathrm{enc}(S_1),\; \ldots,\; \mathrm{enc}(S_n)\bigr)\)
+		\small
+		\begin{verbatim}
+			x4 := fst(x1);
+			x4 := x4 - 1;                // k = number of inputs
+			
+			x5 := snd(x1);                 // (m+1, enc(S1), ...)
+			IF isList(x5) = 0 THEN x0 := 0; HALT END;
+			
+			x6 := fst(x5);
+			x6 := x6 - 1;                // m = max variable index
+			x7 := snd(x5);                 // list of statements
+		\end{verbatim}
+		\vspace{-4pt}
+		\begin{itemize}
+			\item \texttt{fst} then subtract 1 recovers the true value (the $+1$ encoding).
+			\item The remainder after $k$ must still be a well-formed list.
+		\end{itemize}
+	\end{frame}
+	
+	% ========== Slide 8: CP3 & 4 – n and loop setup ==========
+	\begin{frame}[fragile]{Checkpoints 3 \& 4 – Statement Count and Loop Setup}
+		\textbf{Focus:} \(\bigl(k,\; m,\; \mathbf{\mathrm{enc}(S_1),\; \ldots,\; \mathrm{enc}(S_n)}\bigr)\)
+		\small
+		\textbf{CP3} – Number of statements:
+		\begin{verbatim}
+			x8 := len(x7);                 // n
+		\end{verbatim}
+		
+		\textbf{CP4} – Initialise loop variables (countdown from $n$):
+		\begin{verbatim}
+			x9 := x7;                      // pointer into statement list
+			x10 := x8;                     // remaining iterations
+			x0 := 1;                       // assume valid
+		\end{verbatim}
+		\begin{itemize}
+			\item \texttt{x9} will be advanced with \texttt{snd}, \texttt{x10} decremented each round.
+		\end{itemize}
+	\end{frame}
+	
+	% ========== Slide 9: CP5 & 6 – Fetch and decode a statement ==========
+	\begin{frame}[fragile]{Checkpoints 5 \& 6 – Fetch and Decode a Statement}
+		\textbf{Focus:} \(\bigl(k,\; m,\; \ldots,\; \mathbf{\mathrm{enc}(S_i)},\; \ldots\bigr)\)
+		
+		Inside the loop (\texttt{WHILE x10 <> 0 DO ...}):
+		\begin{verbatim}
+			x11 := fst(x9);                // enc(S_i)
+			x12 := isList(x11);
+			IF x12 = 0 THEN x0 := 0        // malformed
+			ELSE
+			x13 := fst(x11);
+			x13 := x13 - 1;            // type (1..5)
+			x14 := snd(x11);           // parameter list
+			x15 := 0;                  // valid-type flag
+			END
+		\end{verbatim}
+		\begin{itemize}
+			\item The statement encoding must itself be a valid list.
+			\item \texttt{x15} will become $1$ when a type block matches.
+		\end{itemize}
+	\end{frame}
+	
+	% ========== Slide 10: CP7 – Type dispatch part 1 ==========
+	\begin{frame}[fragile]{Checkpoint 7 – Type Dispatch (Guarded Blocks)}
+		\textbf{Focus:} \(\bigl(k,\; m,\; \ldots,\; \mathbf{\mathrm{enc}(S_i)},\; \ldots\bigr)\) \\
+		Each of the five types is checked by a flat guarded block.\\
+		Example: \textbf{Type 1} (\texttt{xi := xi+1})
+		{\fontsize{8}{9}\selectfont
+			\begin{verbatim}
+				IF x15 = 0 THEN
+				x16 := x13; x16 := x16 - 1;        // type-1
+				IF x16 <> 0 THEN (skip)
+				ELSE
+				x15 := 1;
+				// parameter length must be 1
+				x17 := len(x14);
+				x18 := x17; x18 := x18 - 1;
+				IF x18 <> 0 THEN x0 := 0 END;      // len > 1
+				IF x17 <> 0 THEN ELSE x0 := 0 END; // len = 0
+				// variable i <= m ?
+				x19 := fst(x14); x19 := x19 - 1;
+				x20 := x19; x21 := x6;
+				WHILE x21 <> 0 DO x20 := x20 - 1; x21 := x21 - 1 END;
+				IF x20 <> 0 THEN x0 := 0 END       // i > m
+				END
+				END
+		\end{verbatim}}
+		\vspace{-6pt}
+		{\small \textbf{Guard \texttt{IF x15=0 THEN ...}} prevents later blocks from firing after a match.}
+	\end{frame}
+	
+	% ========== Slide 11: CP7 – Type dispatch part 2 ==========
+	\begin{frame}[fragile]{Checkpoint 7 – Types 2, 3, 4, 5 (Summary)}
+		\textbf{Focus:} \(\bigl(k,\; m,\; \ldots,\; \mathbf{\mathrm{enc}(S_i)},\; \ldots\bigr)\)
+		{\fontsize{8}{9}\selectfont
+			\begin{itemize}
+				\item \textbf{Type 2} (dec): same as type~1 (length $=1$, $i\le m$).
+				\item \textbf{Type 3} (\texttt{GOTO} $L_j$): length $=1$, label $j\le n$ (uses \texttt{x8}).
+				\item \textbf{Type 4} (\texttt{IF $x_i{=}0$ THEN GOTO $L_j$}):
+				\begin{itemize}
+					\item length $=2$, extract $i$ and $j$.
+					\item check $i\le m$ \emph{and} $j\le n$ with two bound loops.
+				\end{itemize}
+				\item \textbf{Type 5} (\texttt{HALT}): parameter must be the empty list $0$.
+			\end{itemize}
+		}
+		\vspace{4pt}
+		After all 5 blocks:
+		\begin{verbatim}
+			IF x15 = 0 THEN x0 := 0 END   // unknown type
+		\end{verbatim}
+	\end{frame}
+	
+	% ========== Slide 12: Comparison Table ==========
+	\begin{frame}{Comparison Table – Statement Type Checks}
+		\centering
+		\resizebox{\linewidth}{!}{%
+			\begin{tabular}{c|c|c|c|c}
+				\toprule
+				Type & Syntax & \#Params & Meaning & Bound check \\
+				\midrule
+				1 & $x_i:=x_i+1$ & 1 & variable $i$ & $i \le m$ \\
+				2 & $x_i:=x_i-1$ & 1 & variable $i$ & $i \le m$ \\
+				3 & \texttt{GOTO} $L_j$ & 1 & label $j$ & $j \le n$ \\
+				4 & \texttt{IF} $x_i=0$ \texttt{THEN GOTO} $L_j$ & 2 & variable $i$, label $j$ & $i\le m\ \land\ j\le n$ \\
+				5 & \texttt{HALT} & 0 & (none) & (none) \\
+				\bottomrule
+			\end{tabular}%
+		}
+		
+		\vspace{6pt}
+		\small
+		All bound checks are performed by subtraction until zero (the WHILE loop pattern).
+	\end{frame}
+	
+	% ========== Slide 13: CP8 & 9 ==========
+	\begin{frame}[fragile]{Checkpoints 8 \& 9 – Advance and Final Result}
+		\textbf{Focus:} Loop over all \(\mathrm{enc}(S_i)\) completed.
+		\small
+		\textbf{CP8} – move to next statement:
+		\begin{verbatim}
+			x9 := snd(x9);
+			x10 := x10 - 1
+			END   // end of WHILE loop
+		\end{verbatim}
+		
+		\textbf{CP9} – after the loop \texttt{x0} holds the verdict.
+		\begin{itemize}
+			\item \texttt{x0} was set to $1$ initially; any error changed it to $0$.
+			\item Because we never reset \texttt{x0} to $1$, the correct answer persists.
+			\item The procedure is total – every loop terminates.
+		\end{itemize}
+		
+		\vspace{4pt}
+		$\Rightarrow$ \texttt{isProg} is WHILE-computable.
+	\end{frame}
+	
+\end{document}
