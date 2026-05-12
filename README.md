@@ -1,5 +1,3 @@
-```markdown
-
 # isProg: WHILE-Computable Program Verification
 
 
@@ -47,15 +45,8 @@ using Cantor pairing and list encoding, with metadata:
 ```
 
 .
-
-├─ slides/               # Beamer presentation (PDF)
-
-│   └─ isProg-slides.pdf
-
-├─ pseudocode/           # Full WHILE program verification
-
-│   └─ isProg.whi        # Pseudocode in WHILE syntax
-
+├─ isprog.pdf
+├─ pseudocode-isprog.txt
 └─ README.md
 
 ```
@@ -297,11 +288,6 @@ This construction shows how **any GOTO program can be verified syntactically** i
 - N. D. Jones, *Computability and Complexity: From a Programming Perspective*
 
 - B. Reus, *Limits of Computation: From a Programming Perspective*
-
-
-
----
-
 
 
 *Built to accompany the Theory of Computation course. Contributions and corrections are welcome.*
