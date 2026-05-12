@@ -61,27 +61,17 @@ The presentation rebuilds `isProg` in **9 checkpoints**, each focused on a speci
 
 
 
-| Checkpoint | Focus | What is verified |
-
-|------------|-------|------------------|
-
-| 1          | entire list              | `isList(x1)` and `len ≥ 2` |
-
-| 2          | **`k`**, **`m`**         | extract & check metadata |
-
-| 3          | `enc(S₁) … enc(Sₙ)`      | compute `n = len(statements)` |
-
-| 4          | loop setup               | countdown loop over statements |
-
-| 5          | **`enc(Sᵢ)`**            | fetch statement, test `isList` |
-
-| 6          | decoded statement        | extract type (1‑5) and parameters |
-
-| 7          | type dispatch            | guarded blocks for each type, check lengths & bounds |
-
-| 8          | advance pointer          | `snd` + decrement counter |
-
-| 9          | final result             | `x0` contains 1 or 0 |
+| Checkpoint | Focus Area | Verification Task |
+| :---: | :--- | :--- |
+| **1** | Entire list | Ensure `isList(x1)` is true and `len ≥ 2` |
+| **2** | Metadata (**`k`**, **`m`**) | Extract and check variable metadata bounds |
+| **3** | `enc(S₁) … enc(Sₙ)` | Compute total statements: `n = len(statements)` |
+| **4** | Loop setup | Initialize countdown loop over all statements |
+| **5** | **`enc(Sᵢ)`** | Fetch current statement and verify `isList` |
+| **6** | Decoded statement | Extract statement type (1‑5) and parameters |
+| **7** | Type dispatch | Execute guarded blocks per type; check lengths & bounds |
+| **8** | Advance pointer | Apply `snd` and decrement the loop counter |
+| **9** | Final result | Ensure output register `x0` contains `1` or `0` |
 
 
 
