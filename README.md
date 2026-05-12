@@ -2,7 +2,7 @@
 
 ![Penjelasan](video-image.png)
 
-This repository contains a step-by-step reconstruction of the proof that the function `isProg` is WHILE-computable, following the encoding techniques from the Theory of Computation lectures. The video explanation can be shown limited [https://drive.google.com/file/d/1KULBUvsyw2OV6HtlIqMiaz6gvUyRlqRh/view?usp=drive_link][here].
+This repository contains a step-by-step reconstruction of the proof that the function `isProg` is WHILE-computable, following the encoding techniques from the Theory of Computation lectures. The video explanation can be shown limited [here](https://drive.google.com/file/d/1KULBUvsyw2OV6HtlIqMiaz6gvUyRlqRh/view?usp=drive_link).
 
 
 
